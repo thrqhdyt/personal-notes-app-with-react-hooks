@@ -5,6 +5,8 @@ import HomePage from '../pages/HomePage'
 import Navigation from './Navigation';
 import DetailPage from '../pages/DetailPage';
 import ArchivedPage from '../pages/ArchivePage';
+import Page404 from '../pages/Page404';
+
 
 
 function NoteApp() {
@@ -20,6 +22,7 @@ function NoteApp() {
           <Route path='/new' element={<AddPage />}/>
           <Route path='/notes/:id' element={<DetailPage />}/>
           <Route path='/archives' element={<ArchivedPage />} />
+          <Route path='*' element={<Page404 />} />
         </Routes>
       </main>
     </>

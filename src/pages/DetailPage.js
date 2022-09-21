@@ -34,6 +34,11 @@ class DetailPage extends React.Component {
     }
 
     render() {
+      if(this.state.note === undefined){
+        return <p>Tidak ada catatan</p>
+      }
+
+      
       return (
         <section className="detail-page">
           <NoteDetail {...this.state.note} onDelete={deleteNote} onArchived={archiveNote} unArchived={unarchiveNote}/>
