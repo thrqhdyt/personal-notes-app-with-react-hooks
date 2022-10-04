@@ -27,7 +27,8 @@ NoteDetail.propTypes = {
   body: PropTypes.string.isRequired,
   onDelete: PropTypes.func.isRequired,
   onArchived: PropTypes.func.isRequired,
-  unArchived: PropTypes.func.isRequired
+  unArchived: PropTypes.func.isRequired,
+  archived: PropTypes.bool.isRequired,
 }
 
 

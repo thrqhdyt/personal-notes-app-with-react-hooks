@@ -1,6 +1,6 @@
 import React from "react";
 import SaveButton from "./SaveButton";
-
+import PropTypes from "prop-types";
 
 
 class NoteInput extends React.Component {
@@ -53,6 +53,10 @@ class NoteInput extends React.Component {
             </section>
         )
     }
+}
+
+NoteInput.propTypes = {
+    addNote: PropTypes.func.isRequired
 }
 
 export default NoteInput;

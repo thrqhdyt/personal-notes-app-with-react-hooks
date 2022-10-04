@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 function NoteList({notes}) {
   return (
       <section className='notes-list'>
-
         {notes.map((note) => (
             <NoteItem
               key={note.id}

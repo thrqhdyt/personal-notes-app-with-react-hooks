@@ -1,59 +1,59 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from "react";
 import NoteDetail from "../components/NoteDetail";
-import { deleteNote, getNote, archiveNote, unarchiveNote } from "../utils/local-data";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { getNote, deleteNote, archiveNote, unarchiveNote,  } from '../utils/network-data';
 
 
-function DetailPageWrapper() {
+
+function DetailPage() {
   const { id } = useParams();
+  const [ note, setNote] = useState('');
+  const [ loading, setLoading ] = useState(true)
+  const navigate = useNavigate();
 
-  function onDeleteHandler(id) {
-    deleteNote(id);
+  async function onDeleteHandler(id) {
+    await deleteNote(id);
+    navigate('/');
+  }
+  async function onArchiveHandler(id) {
+      await archiveNote(id);
+      navigate('/');
+  }
+  async function onUnarchiveHandler(id) {
+      await unarchiveNote(id);
+      navigate('/');
   }
 
-  function onArchivedHandler(id){
-    archiveNote(id);
-  }
+  useEffect(() => {
+      getNote(id).then((data) => {
+          setNote(data.data);
+          setLoading(false)
+      });
 
-  function onUnArchivedHandler(id){
-    unarchiveNote(id)
-  }
-
-  return <DetailPage id={id} onDelete={onDeleteHandler} onArchived={onArchivedHandler} unArchived={onUnArchivedHandler} />
-}
-
-
-class DetailPage extends React.Component {
-    constructor(props){
-      super(props);
-
-      this.state = {
-        note: getNote(props.id),
+      return () => {
+        setLoading(true)
       }
-    }
+  }, [id]);
 
-    render() {
-      if(this.state.note === undefined){
-        return <p>Tidak ada catatan</p>
-      }
 
-      
-      return (
-        <section className="detail-page">
-          <NoteDetail {...this.state.note} onDelete={deleteNote} onArchived={archiveNote} unArchived={unarchiveNote}/>
-        </section>
-      )
-    }
+
+  if (loading) {
+    return (
+      <div className="detail-page">
+        <p>Loading.....</p>
+      </div>
+    )
+  }
+
+  if (note === '') {
+    return <p>Tidak Ada Catatan</p>;
+  }
+
+  return (
+    <section className="detail-page">
+      <NoteDetail {...note} onDelete={onDeleteHandler} onArchived={onArchiveHandler} unArchived={onUnarchiveHandler}/>
+    </section>
+  )
 }
 
-
-DetailPage.propTypes = {
-  id: PropTypes.string.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  onArchived: PropTypes.func.isRequired,
-  unArchived: PropTypes.func.isRequired
-}
-
-
-export default DetailPageWrapper;
+export default DetailPage;

@@ -1,63 +1,63 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import NoteList from "../components/NoteList";
 import SearchBar from "../components/SearchBar";
-import { getArchivedNotes } from "../utils/local-data";
+import { LocaleConsumer } from "../contexts/LocaleContext";
+import { getArchivedNotes } from '../utils/network-data'
 
-
-function ArchivedPageWrapper(){
+function ArchivedPage() {
+  const [ notes, setNotes ] = useState([]);
   const [ searchParams, setSearchParams ] = useSearchParams();
+  const [ keyword, setKeyword ] = useState(() => {
+    return searchParams.get('keyword') || ''
+  })
+  const [ loading, setLoading ] = useState(true);
 
-  const keyword = searchParams.get('keyword');
+  useEffect(() => {
+    getArchivedNotes().then(({ data }) => {
+      setNotes(data);
+      setLoading(false);
+    })
 
-  function changeSearchParams(keyword){
-    setSearchParams({ keyword })
+    return () => {
+      setLoading(true)
+    }
+  }, [])
+
+  function onKeywordChangeHandler(keyword) {
+    setKeyword(keyword);
+    setSearchParams({ keyword });
   }
 
-  return <ArchivedPage defaultKeyword={keyword} keywordChange={changeSearchParams} />
+  const filteredNote = notes.filter((note) => {
+    return note.title.toLowerCase().includes(
+      keyword.toLowerCase()
+    );
+  });
+
+  const archivedNote = filteredNote.filter((note) => note.archived === true);
+
+
+  if (loading) {
+    return <p>Loading......</p>
+  }
+
+  return (
+          <LocaleConsumer>
+            {
+              ({ locale }) => {
+                return (
+                  <section className="archives-page">
+                    <h2>{ locale === 'id' ? 'Catatan Arsip' : 'Archived Note'}</h2>
+                    <SearchBar keyword={keyword} keywordChange={onKeywordChangeHandler} />
+                    {archivedNote.length !== 0 ? <NoteList notes={archivedNote} /> : <section className="notes-list-empty"><p>Tidak ada catatan</p></section> }
+                    </section>
+                )
+              }
+            }
+          </LocaleConsumer>  
+  )
 }
 
 
-class ArchivedPage extends React.Component {
-    constructor(props){
-      super(props);
-
-      this.state = {
-        notes: getArchivedNotes(),
-        keyword: props.defaultKeyword || ''
-      }
-
-      this.onKeywordChangeHandler = this.onKeywordChangeHandler.bind(this);
-    }
-
-    onKeywordChangeHandler(keyword){
-      this.setState(() => {
-          return {
-              keyword
-          }
-      });
-
-      this.props.keywordChange(keyword);
-    }
-
-    render(){
-      const notes = this.state.notes.filter((note) => {
-        return note.title.toLowerCase().includes(
-          this.state.keyword.toLowerCase()
-        )
-      });
-      
-      const archivedNote = notes.filter((note) => note.archived === true)
-      
-      return(
-        <section className="archives-page">
-          <h2>Catatan Arsip</h2>
-          <SearchBar keyword={this.state.keyword} keywordChange={this.onKeywordChangeHandler} />
-          {archivedNote.length !== 0 ? <NoteList notes={archivedNote} /> : <section className="notes-list-empty"><p>Tidak ada catatan</p></section> }
-        </section>
-      )
-    }
-}
-
-
-export default ArchivedPageWrapper;
+export default ArchivedPage;

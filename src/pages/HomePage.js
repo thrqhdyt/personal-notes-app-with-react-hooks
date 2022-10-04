@@ -1,61 +1,66 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AddAction from "../components/AddAction";
 import NoteList from "../components/NoteList";
 import SearchBar from "../components/SearchBar";
-import { getAllNotes } from "../utils/local-data";
+import { LocaleConsumer } from "../contexts/LocaleContext";
+import { getActiveNotes } from "../utils/network-data";
 
-function HomePageWrapper(){
-    const [ searchParams, setSearchParams ] = useSearchParams();
 
-    const keyword = searchParams.get('keyword');
+function HomePage() {
+  const [ notes, setNotes ] = useState([]);
+  const [ searchParams, setSearchParams ] = useSearchParams();
+  const [ keyword, setKeyword ] = useState(() => {
+    return searchParams.get('keyword') || ''
+  })
+  const [ loading, setLoading ] = useState(true);
 
-    function changeSearchParams(keyword){
-        setSearchParams({ keyword })
+  useEffect(() => {
+    getActiveNotes().then(({ data }) => {
+      setNotes(data);
+      setLoading(false)
+    })
+
+    return () => {
+      setLoading(true);
     }
+  }, [])
 
-    return <HomePage defaultKeyword={keyword} keywordChange={changeSearchParams} />
-}
+  function onKeywordChangeHandler(keyword) {
+    setKeyword(keyword);
+    setSearchParams({ keyword });
+  }
 
-class HomePage extends React.Component {
-    constructor(props){
-        super(props);
+  const filteredNote = notes.filter((note) => {
+    return note.title.toLowerCase().includes(
+      keyword.toLowerCase()
+    );
+  });
 
-        this.state = {
-            notes: getAllNotes(),
-            keyword: props.defaultKeyword || ''
-        }
+  const activeNotes = filteredNote.filter((note) => note.archived === false)
 
-        this.onKeywordChangeHandler = this.onKeywordChangeHandler.bind(this);
-    }
 
-    onKeywordChangeHandler(keyword){
-        this.setState(() => {
-            return {
-                keyword
+  if (loading) {
+    return <p>Loading.........</p>
+  }
+
+  return (
+          <LocaleConsumer>
+            {
+              ({ locale }) => {
+                return (
+                  <section className="homepage">
+                    <h2>{ locale === 'id' ? 'Catatan Aktif' : 'Active Note'}</h2>
+                    <SearchBar keyword={keyword} keywordChange={onKeywordChangeHandler} />
+                    {activeNotes.length !== 0 ? <NoteList notes={activeNotes} /> : <section className="notes-list-empty"><p>Tidak ada catatan</p></section>}
+                    <AddAction />
+                  </section>
+                )
+              }
             }
-        });
-
-        this.props.keywordChange(keyword);
-    }
-
-    render() {
-        const notes = this.state.notes.filter((note) => {
-            return note.title.toLowerCase().includes(
-                this.state.keyword.toLowerCase()
-            )
-        });
-        const activeNotes = notes.filter((note) => note.archived === false );
-        return (
-            <section className="homepage">
-                <h2>Catatan Aktif</h2>
-                <SearchBar keyword={this.state.keyword} keywordChange={this.onKeywordChangeHandler} />
-                {activeNotes.length !== 0 ? <NoteList notes={activeNotes} /> : <section className="notes-list-empty"><p>Tidak ada catatan</p></section>}
-                <AddAction />
-            </section>
+          </LocaleConsumer>
         )
-    }
 }
 
 
-export default HomePageWrapper;
+export default HomePage;
